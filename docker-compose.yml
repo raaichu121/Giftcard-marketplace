@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: giftnow-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: giftnow123
+      POSTGRES_DB: giftnow_giftcard
+    ports:
+      - "5433:5432"
+    volumes:
+      - giftnow_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d giftnow_giftcard"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: giftnow-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - giftnow_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes
+
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: giftnow-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      MH_STORAGE: memory
+
+volumes:
+  giftnow_pg_data:
+  giftnow_redis_data:
