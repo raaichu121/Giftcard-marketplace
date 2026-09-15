@@ -1,0 +1,208 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum GiftCardType {
+  DIGITAL
+  PHYSICAL
+  CORPORATE_BULK
+}
+
+enum GiftCardStatus {
+  ACTIVE
+  FULLY_REDEEMED
+  CANCELLED
+}
+
+enum AuditOperation {
+  CREDIT
+  DEBIT
+  ADMIN_CANCEL_DEBIT
+  REFUND_CREDIT
+}
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+  MODERATOR
+}
+
+model Customer {
+  id        String    @id @default(uuid()) @db.Uuid
+  email     String    @unique
+  name      String
+  googleId  String?   @unique
+  avatarUrl String?
+  isActive  Boolean   @default(true)
+  lastLogin DateTime?
+  metadata  Json      @default("{}")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  wallet GiftCardWallet?
+
+  @@map("customers")
+}
+
+model Admin {
+  id          String    @id @default(uuid()) @db.Uuid
+  username    String    @unique
+  email       String    @unique
+  password    String
+  role        AdminRole @default(ADMIN)
+  isActive    Boolean   @default(true)
+  lastLogin   DateTime?
+  permissions Json      @default("[]")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("admins")
+}
+
+model GiftCardBatch {
+  id               String   @id @default(uuid()) @db.Uuid
+  name             String
+  totalCards       Int
+  totalAmount      Decimal  @db.Decimal(14, 2)
+  createdByAdminId String   @db.Uuid
+  createdAt        DateTime @default(now())
+
+  cards GiftCard[]
+
+  @@map("giftnow_batches")
+}
+
+model GiftCard {
+  id                   String         @id @default(uuid()) @db.Uuid
+  code                 String         @unique @db.VarChar(32)
+  type                 GiftCardType
+  amount               Decimal        @db.Decimal(12, 2)
+  status               GiftCardStatus @default(ACTIVE)
+  purchasedByAccountId String?        @db.Uuid
+  purchaserName        String?
+  purchaserEmail       String?
+  isCustomerPurchase   Boolean        @default(false)
+  redeemedByAccountId  String?        @db.Uuid
+  recipientEmail       String?
+  recipientPhone       String?        @db.VarChar(30)
+  deliveryChannel      String         @default("EMAIL")
+  personalMessage      String?
+  deliveryAddress      Json?
+  batchId              String?        @db.Uuid
+  cardDesignId         String?        @db.Uuid
+  redeemedAt           DateTime?
+  cancelledAt          DateTime?
+  pinHash              String?        @db.VarChar(72)
+  pinAttempts          Int            @default(0)
+  qrCode               String?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime       @updatedAt
+
+  batch      GiftCardBatch?     @relation(fields: [batchId], references: [id])
+  cardDesign OccasionCard?      @relation(fields: [cardDesignId], references: [id])
+  auditLogs  GiftCardAuditLog[]
+
+  @@index([purchasedByAccountId])
+  @@index([redeemedByAccountId])
+  @@index([batchId])
+  @@index([status])
+  @@index([type])
+  @@map("giftnow_cards")
+}
+
+model GiftCardWallet {
+  id            String   @id @default(uuid()) @db.Uuid
+  accountId     String   @unique @db.Uuid
+  balance       Decimal  @default(0) @db.Decimal(12, 2)
+  totalCredited Decimal  @default(0) @db.Decimal(12, 2)
+  totalDebited  Decimal  @default(0) @db.Decimal(12, 2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  customer Customer @relation(fields: [accountId], references: [id])
+
+  @@map("giftnow_wallets")
+}
+
+model GiftCardAuditLog {
+  id            String         @id @default(uuid()) @db.Uuid
+  accountId     String         @db.Uuid
+  giftCardId    String?        @db.Uuid
+  orderId       String?        @db.VarChar(64)
+  operation     AuditOperation
+  amount        Decimal        @db.Decimal(12, 2)
+  balanceBefore Decimal        @db.Decimal(12, 2)
+  balanceAfter  Decimal        @db.Decimal(12, 2)
+  performedBy   String         @db.Uuid
+  createdAt     DateTime       @default(now())
+
+  giftCard GiftCard? @relation(fields: [giftCardId], references: [id])
+
+  @@index([accountId])
+  @@index([createdAt])
+  @@index([giftCardId])
+  @@map("giftnow_audit_logs")
+}
+
+model Otp {
+  id        String   @id @default(uuid()) @db.Uuid
+  email     String?  @db.VarChar(255)
+  phone     String?  @db.VarChar(50)
+  code      String   @db.VarChar(6)
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([email])
+  @@index([phone])
+  @@map("giftnow_otps")
+}
+
+model Occasion {
+  id        String         @id @default(uuid()) @db.Uuid
+  slug      String         @unique @db.VarChar(50)
+  name      String         @db.VarChar(100)
+  nepali    String?        @db.VarChar(100)
+  emoji     String?        @db.VarChar(10)
+  color     String         @default("#2563eb") @db.VarChar(10)
+  isActive  Boolean        @default(true)
+  order     Int            @default(0)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  cards     OccasionCard[]
+
+  @@map("giftnow_occasions")
+}
+
+model OccasionCard {
+  id         String   @id @default(uuid()) @db.Uuid
+  occasionId String   @db.Uuid
+  name       String   @db.VarChar(100)
+  imagePath  String   @db.VarChar(255)
+  isDefault  Boolean  @default(false)
+  valueBox   Json
+  valueColor String   @default("#1a1a2e") @db.VarChar(10)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  occasion   Occasion   @relation(fields: [occasionId], references: [id], onDelete: Cascade)
+  giftCards  GiftCard[]
+
+  @@index([occasionId])
+  @@map("giftnow_occasion_cards")
+}
+
+model PlatformSetting {
+  id        String   @id @default(uuid()) @db.Uuid
+  key       String   @unique @db.VarChar(100)
+  value     Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("giftnow_settings")
+}
