@@ -1,0 +1,75 @@
+# Downloads PNG icons from Flaticon CDN (free tier). Attribution: see public/assets/icons/ATTRIBUTION.md
+$outDir = Join-Path $PSScriptRoot "..\public\assets\icons"
+New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+
+# key -> Flaticon CDN URL (512px PNG)
+$icons = @{
+  "gift" = "https://cdn-icons-png.flaticon.com/512/2913/2913919.png"
+  "shopping" = "https://cdn-icons-png.flaticon.com/512/3081/3081848.png"
+  "food" = "https://cdn-icons-png.flaticon.com/512/5288/5288397.png"
+  "grocery" = "https://cdn-icons-png.flaticon.com/512/1170/1170678.png"
+  "travel" = "https://cdn-icons-png.flaticon.com/512/5978/5978933.png"
+  "entertainment" = "https://cdn-icons-png.flaticon.com/512/2947/2947061.png"
+  "gaming" = "https://cdn-icons-png.flaticon.com/512/5512/5512948.png"
+  "fashion" = "https://cdn-icons-png.flaticon.com/512/2345/2345746.png"
+  "electronics" = "https://cdn-icons-png.flaticon.com/512/3659/3659898.png"
+  "wellness" = "https://cdn-icons-png.flaticon.com/512/2966/2966289.png"
+  "wallet" = "https://cdn-icons-png.flaticon.com/512/2830/2830284.png"
+  "birthday" = "https://cdn-icons-png.flaticon.com/512/1077/1077035.png"
+  "wedding" = "https://cdn-icons-png.flaticon.com/512/2830/2830312.png"
+  "graduation" = "https://cdn-icons-png.flaticon.com/512/3002/3002543.png"
+  "anniversary" = "https://cdn-icons-png.flaticon.com/512/833/833472.png"
+  "thankyou" = "https://cdn-icons-png.flaticon.com/512/1075/1075685.png"
+  "home" = "https://cdn-icons-png.flaticon.com/512/2839/2839026.png"
+  "festival" = "https://cdn-icons-png.flaticon.com/512/3062/3062634.png"
+  "mountain" = "https://cdn-icons-png.flaticon.com/512/484/484167.png"
+  "her" = "https://cdn-icons-png.flaticon.com/512/4140/4140048.png"
+  "him" = "https://cdn-icons-png.flaticon.com/512/4140/4140050.png"
+  "kids" = "https://cdn-icons-png.flaticon.com/512/4140/4140054.png"
+  "parents" = "https://cdn-icons-png.flaticon.com/512/4140/4140058.png"
+  "friends" = "https://cdn-icons-png.flaticon.com/512/742/742751.png"
+  "colleagues" = "https://cdn-icons-png.flaticon.com/512/3281/3281289.png"
+  "building" = "https://cdn-icons-png.flaticon.com/512/2830/2830316.png"
+  "handshake" = "https://cdn-icons-png.flaticon.com/512/2830/2830310.png"
+  "lightning" = "https://cdn-icons-png.flaticon.com/512/616/616438.png"
+  "star" = "https://cdn-icons-png.flaticon.com/512/1828/1828884.png"
+  "target" = "https://cdn-icons-png.flaticon.com/512/3281/3281285.png"
+  "team" = "https://cdn-icons-png.flaticon.com/512/2942/2942153.png"
+  "chart" = "https://cdn-icons-png.flaticon.com/512/3281/3281287.png"
+  "fast" = "https://cdn-icons-png.flaticon.com/512/2972/2972543.png"
+  "mobile" = "https://cdn-icons-png.flaticon.com/512/724/724664.png"
+  "lock" = "https://cdn-icons-png.flaticon.com/512/3064/3064197.png"
+  "money" = "https://cdn-icons-png.flaticon.com/512/2830/2830286.png"
+  "store" = "https://cdn-icons-png.flaticon.com/512/942/942748.png"
+  "tag" = "https://cdn-icons-png.flaticon.com/512/891/891462.png"
+  "burger" = "https://cdn-icons-png.flaticon.com/512/1046/1046784.png"
+  "scooter" = "https://cdn-icons-png.flaticon.com/512/2972/2972185.png"
+  "cinema" = "https://cdn-icons-png.flaticon.com/512/2947/2947061.png"
+  "popcorn" = "https://cdn-icons-png.flaticon.com/512/1040/1040245.png"
+  "plane" = "https://cdn-icons-png.flaticon.com/512/5978/5978933.png"
+  "hotel" = "https://cdn-icons-png.flaticon.com/512/2830/2830314.png"
+  "laptop" = "https://cdn-icons-png.flaticon.com/512/2927/2927278.png"
+  "gym" = "https://cdn-icons-png.flaticon.com/512/2936/2936886.png"
+  "spa" = "https://cdn-icons-png.flaticon.com/512/2966/2966289.png"
+  "controller" = "https://cdn-icons-png.flaticon.com/512/5512/5512948.png"
+  "backpack" = "https://cdn-icons-png.flaticon.com/512/892/892458.png"
+  "credit-card" = "https://cdn-icons-png.flaticon.com/512/2830/2830284.png"
+  "esewa" = "https://cdn-icons-png.flaticon.com/512/2830/2830284.png"
+  "khalti" = "https://cdn-icons-png.flaticon.com/512/2830/2830284.png"
+  "fonepay" = "https://cdn-icons-png.flaticon.com/512/2830/2830284.png"
+  "bank" = "https://cdn-icons-png.flaticon.com/512/2830/2830316.png"
+  "professional" = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"
+  "smartphone" = "https://cdn-icons-png.flaticon.com/512/724/724664.png"
+}
+
+foreach ($entry in $icons.GetEnumerator()) {
+  $dest = Join-Path $outDir "$($entry.Key).png"
+  try {
+    Invoke-WebRequest -Uri $entry.Value -OutFile $dest -UseBasicParsing
+    Write-Host "OK $($entry.Key)"
+  } catch {
+    Write-Host "FAIL $($entry.Key): $_"
+  }
+}
+
+Write-Host "Done. Files in $outDir"
